@@ -1,0 +1,9 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "aws-cloudfront-auto-invalidator"
+s3_prefix = "aws-cloudfront-auto-invalidator"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+tags = "product=\"common\" grouping=\"tooling\" service=\"eight-ball\" managed-resource=\"sam\""

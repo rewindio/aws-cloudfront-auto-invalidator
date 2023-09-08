@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Description: SAM app that automatically invalidates CF distros when S3 content changes
+
+Resources:
+  CloudfrontInvalidator:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: src/app.lambda_handler
+      Runtime: python3.9
+      CodeUri: .
+      Description: Invalidates content in a cloudfront distro when S3 content changes.
+      MemorySize: 512
+      Timeout: 30
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - 'cloudfront:CreateInvalidation'
+                - 'cloudfront:Get*'
+                - 'cloudfront:ListDistributions'
+              Resource: '*'
+
+Outputs:
+  InvalidatorFunctionName:
+    Description: The name of the lambda invalidator Function
+    Value: !Ref CloudfrontInvalidator
