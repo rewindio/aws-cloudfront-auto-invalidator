@@ -22,7 +22,7 @@ jobs:
           PYTHONPATH: .
         run:  |
           set -o pipefail
-          poetry run pytest --junitxml=pytest.xml --cov=rewind_connect tests/test*.py | tee pytest-coverage.txt
+          pytest --junitxml=pytest.xml --cov=rewind_connect tests/test*.py | tee pytest-coverage.txt
 
       - name: Comment coverage
         uses: MishaKav/pytest-coverage-comment@81882822c5b22af01f91bd3eacb1cefb6ad73dc2 # v1.1.53
