@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest-arm
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       contents: read
