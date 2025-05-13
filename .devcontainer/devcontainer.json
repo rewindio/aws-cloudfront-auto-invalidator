@@ -1,0 +1,45 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.0/containers/ubuntu
+{
+	"name": "python",
+	"image": "python:3.13",
+
+	"runArgs": [
+		"--init"
+	],
+	"mounts": [
+		"source=${env:HOME}${env:USERPROFILE}/.aws,target=/root/.aws,type=bind",
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+		"source=${env:HOME}${env:USERPROFILE}/.gitconfig,target=/root/.gitconfig,type=bind",
+		"source=${env:HOME}${env:USERPROFILE}/.config/gh,target=/root/.config/gh,type=bind",
+		"source=${env:HOME}${env:USERPROFILE}/.ssh,target=/root/.ssh,type=bind",
+	],
+	"containerEnv": {
+		"POETRY_VIRTUALENVS_CREATE": "false"
+	},
+	"features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+		"ghcr.io/devcontainers/features/aws-cli:1": {}
+	},
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"ms-python.python",
+				"redhat.vscode-yaml",
+				"amazonwebservices.aws-toolkit-vscode",
+				"Cameron.vscode-pytest",
+				"mikoz.black-py",
+				"ms-python.black-formatter"
+			],
+			"settings":{
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.testing.pytestEnabled": true,
+				"python.formatting.provider": "black",
+				"python.linting.mypyEnabled": true,
+				"python.linting.enabled": true
+			}
+		}
+	}
+}

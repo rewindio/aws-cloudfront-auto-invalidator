@@ -8,7 +8,7 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: src/app.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.13
       CodeUri: .
       Description: Invalidates content in a cloudfront distro when S3 content changes.
       MemorySize: 512
