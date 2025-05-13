@@ -1,1 +1,15 @@
 packaged.yaml
+
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+**/*.pyd
+**/*.egg-info/
+**/*.egg
+**/*.whl
+**/*.so
+**/*.dSYM/
+**/*.DS_Store
+
+
+

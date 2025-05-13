@@ -5,7 +5,7 @@ This is a small Lambda function (packaged somewhat with AWS SAM) to auto-invalid
 * AWS CLI (configured with at least one profile)
 * AWS SAM CLI
 * Existing S3 bucket to store SAM Lambda code
-* Existing S3 bucket and Cloudfront distribution 
+* Existing S3 bucket and Cloudfront distribution
 
 ## Deploying
 Invoke the `deploy.sh` script in the root of the project as follows:
@@ -28,4 +28,10 @@ The function can be executed locally using the SAM CLI and the SampleEvent.json 
 sam local invoke --event SampleEvent.json
 ```
 This will invoke your function and pass it the contents of SampleEvent.json.  You will need to modify SampleEvent.json to represent a valid S3 bucket.
+
+## Running Tests
+
+Setup your python environment using venv or .devcontainer.
+
+`PYTHONPATH=. pytest .`
 
