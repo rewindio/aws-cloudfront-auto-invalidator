@@ -5,6 +5,7 @@ import os
 from src.app import lambda_handler
 from unittest.mock import patch
 
+
 @pytest.fixture
 def aws_credentials():
     os.environ["AWS_ACCESS_KEY_ID"] = "testing"
@@ -79,8 +80,8 @@ def test_lambda_handler_happy_path(s3_and_cloudfront_setup, mock_cloudfront):
     }
     # Patch the global variable in lambda_handler
     with patch("src.app.cloudfront_client", mock_cloudfront):
-      # Call the lambda handler
-      response = lambda_handler(event, None)
+        # Call the lambda handler
+        response = lambda_handler(event, None)
 
     # Assertions
     assert response == "Success"
