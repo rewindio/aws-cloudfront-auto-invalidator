@@ -7,9 +7,9 @@ Resources:
   CloudfrontInvalidator:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Handler: src/app.lambda_handler
+      Handler: app.lambda_handler
       Runtime: python3.13
-      CodeUri: .
+      CodeUri: src/app.py
       Description: Invalidates content in a cloudfront distro when S3 content changes.
       MemorySize: 512
       Timeout: 30
