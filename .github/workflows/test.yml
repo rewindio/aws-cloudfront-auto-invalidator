@@ -11,20 +11,20 @@ jobs:
       pull-requests: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.13'
 
       - run: pip install -r requirements.txt
-      
+
       - name: Format
-        uses: psf/black@stable
+        uses: psf/black@35ea67920b7f6ac8e09be1c47278752b1e827f76 # stable
 
       - name: Unit Tests
         env:
           PYTHONPATH: .
-        run:  |
+        run: |
           set -o pipefail
           pytest --junitxml=pytest.xml --cov=rewind_connect tests/test*.py | tee pytest-coverage.txt
 
