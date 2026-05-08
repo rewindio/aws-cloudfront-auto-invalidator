@@ -71,6 +71,52 @@ def s3_and_cloudfront_setup(mock_s3, mock_cloudfront):
     yield bucket_name, "test-key"
 
 
+@pytest.fixture
+def s3_and_cloudfront_regional_setup(mock_s3, mock_cloudfront, monkeypatch):
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-1")
+    monkeypatch.setenv("AWS_REGION", "eu-west-1")
+
+    bucket_name = "test-bucket-regional"
+    mock_s3.create_bucket(
+        Bucket=bucket_name,
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-1"},
+    )
+    mock_s3.put_object(Bucket=bucket_name, Key="test-key", Body="test-content")
+
+    distribution_config = {
+        "CallerReference": "test-distribution-regional",
+        "Comment": "Test distribution regional",
+        "Origins": {
+            "Quantity": 1,
+            "Items": [
+                {
+                    "Id": "S3-test-bucket-regional",
+                    "DomainName": f"{bucket_name}.s3.eu-west-1.amazonaws.com",
+                    "OriginPath": "",
+                    "CustomHeaders": {"Quantity": 0},
+                    "S3OriginConfig": {"OriginAccessIdentity": ""},
+                }
+            ],
+        },
+        "DefaultCacheBehavior": {
+            "TargetOriginId": "S3-test-bucket-regional",
+            "ViewerProtocolPolicy": "allow-all",
+            "TrustedSigners": {"Enabled": False, "Quantity": 0},
+            "ForwardedValues": {
+                "QueryString": False,
+                "Cookies": {"Forward": "none"},
+                "Headers": {"Quantity": 0},
+                "QueryStringCacheKeys": {"Quantity": 0},
+            },
+            "MinTTL": 0,
+        },
+        "Enabled": True,
+    }
+    mock_cloudfront.create_distribution(DistributionConfig=distribution_config)
+
+    yield bucket_name, "test-key"
+
+
 def test_lambda_handler_happy_path(s3_and_cloudfront_setup, mock_cloudfront):
     bucket_name, key = s3_and_cloudfront_setup
 
@@ -84,4 +130,18 @@ def test_lambda_handler_happy_path(s3_and_cloudfront_setup, mock_cloudfront):
         response = lambda_handler(event, None)
 
     # Assertions
+    assert response == "Success"
+
+
+def test_lambda_handler_regional_origin(
+    s3_and_cloudfront_regional_setup, mock_cloudfront
+):
+    bucket_name, key = s3_and_cloudfront_regional_setup
+
+    event = {
+        "Records": [{"s3": {"bucket": {"name": bucket_name}, "object": {"key": key}}}]
+    }
+    with patch("src.app.cloudfront_client", mock_cloudfront):
+        response = lambda_handler(event, None)
+
     assert response == "Success"

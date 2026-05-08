@@ -9,7 +9,10 @@ cloudfront_client = boto3.client("cloudfront")
 
 def get_cloudfront_distribution_id(bucket):
 
-    bucket_origin = bucket + ".s3.amazonaws.com"
+    bucket_origins = {bucket + ".s3.amazonaws.com"}
+    region = boto3.session.Session().region_name
+    if region:
+        bucket_origins.add(bucket + ".s3." + region + ".amazonaws.com")
     cf_distro_id = None
 
     # Create a reusable Paginator
@@ -22,7 +25,7 @@ def get_cloudfront_distribution_id(bucket):
         for distribution in page["DistributionList"]["Items"]:
             for cf_origin in distribution["Origins"]["Items"]:
                 print("Origin found {}".format(cf_origin["DomainName"]))
-                if bucket_origin == cf_origin["DomainName"]:
+                if cf_origin["DomainName"] in bucket_origins:
                     cf_distro_id = distribution["Id"]
                     print(
                         "The CF distribution ID for {} is {}".format(
