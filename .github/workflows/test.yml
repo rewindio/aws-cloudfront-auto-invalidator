@@ -29,6 +29,7 @@ jobs:
           pytest --junitxml=pytest.xml --cov=rewind_connect tests/test*.py | tee pytest-coverage.txt
 
       - name: Comment coverage
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: MishaKav/pytest-coverage-comment@dd5b80bde6d16941f336518e92929e89069d8451 # v1.7.2
         with:
           pytest-coverage-path: ./pytest-coverage.txt
