@@ -145,3 +145,70 @@ def test_lambda_handler_regional_origin(
         response = lambda_handler(event, None)
 
     assert response == "Success"
+
+
+def _make_distribution_config(bucket_name, caller_reference):
+    return {
+        "CallerReference": caller_reference,
+        "Comment": caller_reference,
+        "Origins": {
+            "Quantity": 1,
+            "Items": [
+                {
+                    "Id": f"S3-{bucket_name}",
+                    "DomainName": f"{bucket_name}.s3.amazonaws.com",
+                    "OriginPath": "",
+                    "CustomHeaders": {"Quantity": 0},
+                    "S3OriginConfig": {"OriginAccessIdentity": ""},
+                }
+            ],
+        },
+        "DefaultCacheBehavior": {
+            "TargetOriginId": f"S3-{bucket_name}",
+            "ViewerProtocolPolicy": "allow-all",
+            "TrustedSigners": {"Enabled": False, "Quantity": 0},
+            "ForwardedValues": {
+                "QueryString": False,
+                "Cookies": {"Forward": "none"},
+                "Headers": {"Quantity": 0},
+                "QueryStringCacheKeys": {"Quantity": 0},
+            },
+            "MinTTL": 0,
+        },
+        "Enabled": True,
+    }
+
+
+def test_lambda_handler_invalidates_all_matching_distributions(
+    mock_s3, mock_cloudfront
+):
+    bucket_name = "shared-origin-bucket"
+    mock_s3.create_bucket(Bucket=bucket_name)
+    mock_s3.put_object(Bucket=bucket_name, Key="test-key", Body="test-content")
+
+    expected_distribution_ids = set()
+    for caller_ref in ("dist-a", "dist-b"):
+        result = mock_cloudfront.create_distribution(
+            DistributionConfig=_make_distribution_config(bucket_name, caller_ref)
+        )
+        expected_distribution_ids.add(result["Distribution"]["Id"])
+
+    event = {
+        "Records": [
+            {"s3": {"bucket": {"name": bucket_name}, "object": {"key": "test-key"}}}
+        ]
+    }
+    with patch("src.app.cloudfront_client", mock_cloudfront):
+        response = lambda_handler(event, None)
+
+    assert response == "Success"
+
+    invalidated_distribution_ids = set()
+    for distribution_id in expected_distribution_ids:
+        invalidations = mock_cloudfront.list_invalidations(
+            DistributionId=distribution_id
+        )["InvalidationList"].get("Items", [])
+        if invalidations:
+            invalidated_distribution_ids.add(distribution_id)
+
+    assert invalidated_distribution_ids == expected_distribution_ids

@@ -7,13 +7,13 @@ import time
 cloudfront_client = boto3.client("cloudfront")
 
 
-def get_cloudfront_distribution_id(bucket):
+def get_cloudfront_distribution_ids(bucket):
 
     bucket_origins = {bucket + ".s3.amazonaws.com"}
     region = boto3.session.Session().region_name
     if region:
         bucket_origins.add(bucket + ".s3." + region + ".amazonaws.com")
-    cf_distro_id = None
+    cf_distro_ids = []
 
     # Create a reusable Paginator
     paginator = cloudfront_client.get_paginator("list_distributions")
@@ -26,14 +26,15 @@ def get_cloudfront_distribution_id(bucket):
             for cf_origin in distribution["Origins"]["Items"]:
                 print("Origin found {}".format(cf_origin["DomainName"]))
                 if cf_origin["DomainName"] in bucket_origins:
-                    cf_distro_id = distribution["Id"]
+                    cf_distro_ids.append(distribution["Id"])
                     print(
                         "The CF distribution ID for {} is {}".format(
-                            bucket, cf_distro_id
+                            bucket, distribution["Id"]
                         )
                     )
+                    break
 
-    return cf_distro_id
+    return cf_distro_ids
 
 
 # --------------- Main handler ------------------
@@ -51,37 +52,38 @@ def lambda_handler(event, context):
     if not key.startswith("/"):
         key = "/" + key
 
-    cf_distro_id = get_cloudfront_distribution_id(bucket)
+    cf_distro_ids = get_cloudfront_distribution_ids(bucket)
 
-    if cf_distro_id:
-        print(
-            "Creating invalidation for {} on Cloudfront distribution {}".format(
-                key, cf_distro_id
-            )
-        )
-
-        try:
-            invalidation = cloudfront_client.create_invalidation(
-                DistributionId=cf_distro_id,
-                InvalidationBatch={
-                    "Paths": {"Quantity": 1, "Items": [key]},
-                    "CallerReference": str(time.time()),
-                },
-            )
-
+    if cf_distro_ids:
+        for cf_distro_id in cf_distro_ids:
             print(
-                "Submitted invalidation. ID {} Status {}".format(
-                    invalidation["Invalidation"]["Id"],
-                    invalidation["Invalidation"]["Status"],
+                "Creating invalidation for {} on Cloudfront distribution {}".format(
+                    key, cf_distro_id
                 )
             )
-        except Exception as e:
-            print(
-                "Error processing object {} from bucket {}. Event {}".format(
-                    key, bucket, json.dumps(event, indent=2)
+
+            try:
+                invalidation = cloudfront_client.create_invalidation(
+                    DistributionId=cf_distro_id,
+                    InvalidationBatch={
+                        "Paths": {"Quantity": 1, "Items": [key]},
+                        "CallerReference": str(time.time()),
+                    },
                 )
-            )
-            raise e
+
+                print(
+                    "Submitted invalidation. ID {} Status {}".format(
+                        invalidation["Invalidation"]["Id"],
+                        invalidation["Invalidation"]["Status"],
+                    )
+                )
+            except Exception:
+                print(
+                    "Error processing object {} from bucket {} on distribution {}. Event {}".format(
+                        key, bucket, cf_distro_id, json.dumps(event, indent=2)
+                    )
+                )
+                raise
     else:
         print(
             "Bucket {} does not appeaer to be an origin for a Cloudfront distribution".format(
